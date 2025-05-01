@@ -1,14 +1,17 @@
 export const theme = {
   colors: {
-    primary: '#4CAF50',       // Modern Green
+    primary: '#2F6B3A',       // Button background
     success: '#66BB6A',       // Bright success green
-    error: '#EF5350',         // Slightly softened red
-    background: '#FFFFFF',
-    text: '#1B5E20',          // Deep green for readability
-    subtext: '#4E944F',       // Subdued green tone
-    border: '#C8E6C9',        // Light green-gray border
-    lightGray: '#F1F8E9',     // Soft green-tinted gray
-    muted: '#A5D6A7',         // Muted green for subtle UI
+    error: '#EF5350',         // Soft red for errors
+    background: '#E8F3EC',    // Pale green background (container background)
+    surface: '#FFFFFF',       // White input background
+    text: '#2F2F2F',          // Main dark text (titles)
+    subtext: '#4E944F',       // Subtitle or link tone
+    border: '#C8E6C9',        // Optional border for input
+    muted: '#A5D6A7',         // Muted soft green (optional UI)
+    shadow: '#000000',        // For input shadow
+    link: '#2F6B3A',          // Link color ("Sign In")
+    placeholder: '#888888',   // Placeholder input text
   },
   spacing: {
     xs: 4,
@@ -33,10 +36,10 @@ export const theme = {
       xl: 28,
     },
     weight: {
-      regular: 400,
-      medium: 500,
-      semiBold: 600,
-      bold: 700,
+      regular: '400',
+      medium: '500',
+      semiBold: '600',
+      bold: '700',
     },
   },
 };

@@ -16,7 +16,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.wa2goose.MindMatter"
+      "bundleIdentifier": "com.wa2goose.MindMatter",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -40,8 +43,14 @@
     "extra": {
       "router": {
         "origin": false
+      },
+      "eas": {
+        "projectId": "a022275c-71d2-4076-b2ca-97b650e2ec46"
       }
     },
     "runtimeVersion": "1.0.0",
+    "updates": {
+      "url": "https://u.expo.dev/a022275c-71d2-4076-b2ca-97b650e2ec46"
+    }
   }
 }

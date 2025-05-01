@@ -2,7 +2,7 @@
 // Get the correct API URL based on platform and environment
 const getApiBaseUrl = () => {
 
-  return 'http://localhost:8000/api' // Replace with your actual API URL
+  return 'http://localhost:5000' // Replace with your actual API URL
   // if (isDev) {
   //   // Development environment - use localhost for all platforms
   //   // This works because we're allowing all origins in dev mode
