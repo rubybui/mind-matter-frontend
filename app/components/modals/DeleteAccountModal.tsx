@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../theme';
 import BaseModal from './BaseModal';
 
+const DELETE_CONFIRMATION_PHRASE = 'delete me';
 interface DeleteAccountModalProps {
   visible: boolean;
   onClose: () => void;
@@ -17,8 +18,13 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
 }) => {
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
 
+  useEffect(() => {
+    if (visible) {
+      setDeleteConfirmation('');
+    }
+  }, [visible]);
+
   const handleClose = () => {
-    setDeleteConfirmation('');
     onClose();
   };
 
@@ -30,13 +36,13 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
       icon={<Ionicons name="trash" size={24} color={theme.colors.error} />}
     >
       <Text style={styles.modalText}>
-        This action cannot be undone. To confirm, please type "delete me" below:
+        This action cannot be undone. To confirm, please type "{DELETE_CONFIRMATION_PHRASE}" below:
       </Text>
       <TextInput
         style={styles.confirmationInput}
         value={deleteConfirmation}
         onChangeText={setDeleteConfirmation}
-        placeholder="Type 'delete me' to confirm"
+        placeholder={`Type "${DELETE_CONFIRMATION_PHRASE}" to confirm`}
         placeholderTextColor="#999"
       />
       <View style={styles.modalButtons}>
@@ -49,9 +55,9 @@ const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
         <TouchableOpacity
           style={[
             styles.modalButton,
-            deleteConfirmation === 'delete me' ? styles.deleteButton : styles.disabledDeleteButton
+            deleteConfirmation === DELETE_CONFIRMATION_PHRASE ? styles.deleteButton : styles.disabledDeleteButton
           ]}
-          disabled={deleteConfirmation !== 'delete me'}
+          disabled={deleteConfirmation !== DELETE_CONFIRMATION_PHRASE}
           onPress={onConfirm}
         >
           <Text style={[styles.buttonText, styles.deleteButtonText]}>Delete</Text>

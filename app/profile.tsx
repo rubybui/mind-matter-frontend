@@ -107,22 +107,33 @@ const ProfileScreen = () => {
           style: user.consent ? 'destructive' : 'default',
           onPress: async () => {
             try {
-              const res = await fetch(`${config.apiBaseUrl}/user/consent`, {
-                method: 'PUT',
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ consent: !user.consent }),
+              setUser(prev => {
+                if (!prev) return null;
+                const newConsent = !prev.consent;
+                
+                fetch(`${config.apiBaseUrl}/user/consent`, {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({ consent: newConsent }),
+                })
+                .then(async response => {
+                  const data = await response.json();
+                  if (!response.ok) {
+                    Alert.alert('Error', data?.error || 'Failed to update consent');
+                    setUser(prev => prev ? { ...prev, consent: !newConsent } : null);
+                  }
+                })
+                .catch(error => {
+                  console.error('Consent update error:', error);
+                  Alert.alert('Error', 'Failed to update consent');
+                  setUser(prev => prev ? { ...prev, consent: !newConsent } : null);
+                });
+
+                return { ...prev, consent: newConsent };
               });
-
-              const data = await res.json();
-
-              if (res.ok) {
-                setUser(prev => prev ? { ...prev, consent: !prev.consent } : null);
-              } else {
-                Alert.alert('Error', data?.error || 'Failed to update consent');
-              }
             } catch (error) {
               console.error('Consent update error:', error);
               Alert.alert('Error', 'Failed to update consent');
