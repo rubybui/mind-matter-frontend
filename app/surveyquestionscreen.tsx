@@ -3,9 +3,11 @@ import { View, Text, StyleSheet, Button, ScrollView, Alert } from 'react-native'
 import { useLocalSearchParams } from 'expo-router';
 import { config } from '@/app/config';
 import { useAuth } from '@/app/context/AuthContext';
-
+import { Ionicons } from '@expo/vector-icons';
+import { theme } from '@/app/theme';
 import LinkertScaleQuestion from '@/components/questions/LinkertScaleQuestion';
 import YesNoQuestion from '@/components/questions/YesNoQuestion';
+import ThemedButton from '@/components/themed/ThemedButton';
 
 const PAGE_SIZE = 3;
 
@@ -116,12 +118,25 @@ const SurveyQuestionScreen: React.FC = () => {
 
       <View style={styles.buttonRow}>
         {currentIndex > 0 && (
-          <Button title="Back" onPress={handleBack} />
+          <ThemedButton 
+            title="Back" 
+            onPress={handleBack}
+            icon={<Ionicons name="chevron-back" size={20} color={theme.colors.primary} />}
+            iconPosition="left"
+            style={styles.navButton}
+            variant="transparent"
+            textColor={theme.colors.primary}
+          />
         )}
-        <Button
+        <ThemedButton
           title={currentIndex + PAGE_SIZE < totalQuestions ? 'Next' : 'Finish'}
           onPress={handleNext}
           disabled={isLoading}
+          icon={<Ionicons name="chevron-forward" size={20} color={theme.colors.primary} />}
+          iconPosition="right"
+          variant="transparent"
+          style={styles.navButton}
+          textColor={theme.colors.primary}
         />
       </View>
     </ScrollView>
@@ -136,6 +151,10 @@ const styles = StyleSheet.create({
     marginTop: 24,
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  navButton: {
+    paddingHorizontal: 20,
+    minWidth: 120,
   },
 });
 

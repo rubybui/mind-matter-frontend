@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import BaseQuestionCard from './BaseQuestionCard';
+import { theme } from '../../app/theme';
 
 interface YesNoQuestionData {
   question_id: number;
@@ -75,6 +76,7 @@ const styles = StyleSheet.create({
   optionContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
+    marginTop: theme.spacing.sm,
   },
   optionButton: {
     padding: 10,
@@ -82,13 +84,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   optionText: {
-    fontSize: 16,
-    color: '#AAA',
+    fontSize: theme.font.size.base,
+    color: theme.colors.subtext,
   },
   optionTextSelected: {
-    color: '#000',
+    color: theme.colors.primary,
     fontWeight: 'bold',
-    fontSize: 18,
+    fontSize: theme.font.size.md,
   },
 });
 
