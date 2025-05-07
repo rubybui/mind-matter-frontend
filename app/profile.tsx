@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from './context/AuthContext';
 import { theme } from './theme';
 import ThemedMenuItem from '@/components/themed/ThemedMenuItem';
+import { Ionicons } from '@expo/vector-icons';
 
 // Mock data - replace with real data later
 const MOCK_USER = {
@@ -94,8 +95,10 @@ const ProfileScreen = () => {
 
   return (
     <ScrollView style={styles.container}>
-      {/* Profile Header */}
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.replace('/survey')} style={styles.headerBackArrow}>
+          <Ionicons name="chevron-back" size={28} color="#FFF" />
+        </TouchableOpacity>
         <View style={styles.avatarContainer}>
           <Text style={styles.avatarText}>
             {MOCK_USER.name.split(' ').map(n => n[0]).join('')}
@@ -168,10 +171,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
+  headerBackArrow: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    zIndex: 10,
+  },
   header: {
     alignItems: 'center',
     padding: 24,
     backgroundColor: theme.colors.primary,
+    position: 'relative',
   },
   avatarContainer: {
     width: 100,
