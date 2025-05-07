@@ -7,8 +7,7 @@ import { useAuth } from '@/app/context/AuthContext';
 import LinkertScaleQuestion from '@/components/questions/LinkertScaleQuestion';
 import YesNoQuestion from '@/components/questions/YesNoQuestion';
 
-const QUESTIONS_PER_PAGE = 3;
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 3;
 
 const SurveyQuestionScreen: React.FC = () => {
   const { question, totalQuestions: initialTotal } = useLocalSearchParams();
@@ -18,13 +17,19 @@ const SurveyQuestionScreen: React.FC = () => {
   const [totalQuestions, setTotalQuestions] = useState(parseInt(initialTotal as string, 10));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number | boolean>>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
 
   const surveyId = questions.length > 0 ? questions[0].survey_id : null;
 
   const fetchMoreQuestions = async () => {
+    if (isLoading) return;
+    
     try {
+      setIsLoading(true);
+      const nextPage = currentPage + 1;
       const res = await fetch(
-        `${config.apiBaseUrl}/surveys/${surveyId}/questions?offset=${questions.length}&limit=${PAGE_SIZE}`,
+        `${config.apiBaseUrl}/surveys/${surveyId}/questions?page=${nextPage}&page_size=${PAGE_SIZE}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -34,15 +39,17 @@ const SurveyQuestionScreen: React.FC = () => {
 
       const data = await res.json();
 
-      if (res.ok && Array.isArray(data)) {
-        setQuestions((prev) => [...prev, ...data]);
-        setTotalQuestions((prev) => prev + data.length);
+      if (res.ok && data.data && Array.isArray(data.data)) {
+        setQuestions((prev) => [...prev, ...data.data]);
+        setCurrentPage(nextPage);
       } else {
         Alert.alert('No more questions');
       }
     } catch (err) {
       console.error('Failed to fetch more questions:', err);
       Alert.alert('Error fetching more questions');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -54,7 +61,7 @@ const SurveyQuestionScreen: React.FC = () => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
-  const currentQuestions = questions.slice(currentIndex, currentIndex + QUESTIONS_PER_PAGE);
+  const currentQuestions = questions.slice(currentIndex, currentIndex + PAGE_SIZE);
 
   const renderQuestion = (q: any, idx: number) => {
     const key = `${q.question_id}-${idx}`;
@@ -86,18 +93,18 @@ const SurveyQuestionScreen: React.FC = () => {
   };
 
   const handleNext = async () => {
-    const nextIndex = currentIndex + QUESTIONS_PER_PAGE;
+    const nextIndex = currentIndex + PAGE_SIZE;
 
     if (nextIndex < questions.length) {
       setCurrentIndex(nextIndex);
-    } else {
+    } else if (questions.length < totalQuestions) {
       await fetchMoreQuestions();
       setCurrentIndex(nextIndex);
     }
   };
 
   const handleBack = () => {
-    const prevIndex = currentIndex - QUESTIONS_PER_PAGE;
+    const prevIndex = currentIndex - PAGE_SIZE;
     if (prevIndex >= 0) {
       setCurrentIndex(prevIndex);
     }
@@ -112,8 +119,9 @@ const SurveyQuestionScreen: React.FC = () => {
           <Button title="Back" onPress={handleBack} />
         )}
         <Button
-          title={currentIndex + QUESTIONS_PER_PAGE < totalQuestions ? 'Next' : 'Finish'}
+          title={currentIndex + PAGE_SIZE < totalQuestions ? 'Next' : 'Finish'}
           onPress={handleNext}
+          disabled={isLoading}
         />
       </View>
     </ScrollView>

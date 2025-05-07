@@ -7,6 +7,8 @@ import { theme } from './theme';
 import { config } from '@/app/config';
 import { useRouter } from 'expo-router';
 
+const PAGE_SIZE = 3;
+
 const SurveyListScreen = () => {
   const { token, isHydrated } = useAuth();
   const [surveys, setSurveys] = useState<any[]>([]);
@@ -44,7 +46,7 @@ const SurveyListScreen = () => {
 
   const handleSelectSurvey = async (surveyId: number) => {
     try {
-      const res = await fetch(`${config.apiBaseUrl}/surveys/${surveyId}/questions`, {
+      const res = await fetch(`${config.apiBaseUrl}/surveys/${surveyId}/questions?page=1&page_size=${PAGE_SIZE}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -52,14 +54,14 @@ const SurveyListScreen = () => {
 
       const data = await res.json();
 
-      if (res.ok && Array.isArray(data) && data.length > 0) {
+      if (res.ok && data.data && Array.isArray(data.data) && data.data.length > 0) {
         router.push({
-            pathname: '/surveyquestionscreen',
-            params: {
-              question: JSON.stringify(data),
-              totalQuestions: data.length.toString(),
-            },
-          });
+          pathname: '/surveyquestionscreen',
+          params: {
+            question: JSON.stringify(data.data),
+            totalQuestions: data.pagination.total.toString(),
+          },
+        });
       } else {
         Alert.alert('No Questions', 'This survey has no questions.');
       }
