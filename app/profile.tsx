@@ -1,97 +1,164 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from './context/AuthContext';
 import { theme } from './theme';
 import ThemedMenuItem from '@/components/themed/ThemedMenuItem';
 import { Ionicons } from '@expo/vector-icons';
-
-// Mock data - replace with real data later
-const MOCK_USER = {
-  name: 'Alex Johnson',
-  pronouns: 'they/them',
-  streak: 7,
-  assessments: [
-    { id: 1, date: '2024-03-15', type: 'Weekly Check-in', score: 85 },
-    { id: 2, date: '2024-03-08', type: 'Weekly Check-in', score: 78 },
-    { id: 3, date: '2024-03-01', type: 'Weekly Check-in', score: 82 },
-  ],
-  consent: true,
-};
+import { config } from './config';
+import ConfirmationModal from './components/modals/ConfirmationModal';
+import DeleteAccountModal from './components/modals/DeleteAccountModal';
+import { User } from './types/profile';
 
 const ProfileScreen = () => {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, token } = useAuth();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Logout',
-          style: 'destructive',
-          onPress: () => logout()
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  const fetchUserData = async () => {
+    try {
+      const res = await fetch(`${config.apiBaseUrl}/users/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      ]
-    );
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setUser(data.user);
+      } else {
+        Alert.alert('Error', data?.error || 'Failed to load user data');
+      }
+    } catch (error) {
+      console.error('Failed to fetch user data:', error);
+      Alert.alert('Error', 'Failed to load user data');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleLogoutAllDevices = () => {
-    Alert.alert(
-      'Logout All Devices',
-      'This will log you out of all devices. Are you sure?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Logout All',
-          style: 'destructive',
-          onPress: () => {
-            // TODO: Implement logout all devices
-            logout();
-          }
+  const handleLogout = async () => {
+    try {
+      const res = await fetch(`${config.apiBaseUrl}/user/logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
-      ]
-    );
+      });
+
+      if (res.ok) {
+        setShowLogoutModal(false);
+        logout();
+        router.replace('/');
+      } else {
+        const data = await res.json();
+        Alert.alert('Error', data?.error || 'Failed to logout');
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      Alert.alert('Error', 'Failed to logout');
+    }
   };
 
-  const handleDeleteAccount = () => {
-    Alert.alert(
-      'Delete Account',
-      'This action cannot be undone. Are you sure you want to delete your account?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            // TODO: Implement account deletion
-            logout();
-          }
+  const handleDeleteAccount = async () => {
+    try {
+      const res = await fetch(`${config.apiBaseUrl}/users/me/delete`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      ]
-    );
+      });
+
+      if (res.ok) {
+        setShowDeleteModal(false);
+        logout();
+        router.replace('/');
+      } else {
+        const data = await res.json();
+        Alert.alert('Error', data?.error || 'Failed to delete account');
+      }
+    } catch (error) {
+      console.error('Delete account error:', error);
+      Alert.alert('Error', 'Failed to delete account');
+    }
   };
 
   const handleConsentToggle = () => {
+    if (!user) return;
+
     Alert.alert(
       'Update Consent',
-      MOCK_USER.consent 
+      user.consent 
         ? 'Are you sure you want to revoke consent? This will limit some features.'
         : 'Are you sure you want to give consent? This will enable all features.',
       [
         { text: 'Cancel', style: 'cancel' },
         { 
-          text: MOCK_USER.consent ? 'Revoke' : 'Give',
-          style: MOCK_USER.consent ? 'destructive' : 'default',
-          onPress: () => {
-            // TODO: Implement consent toggle
+          text: user.consent ? 'Revoke' : 'Give',
+          style: user.consent ? 'destructive' : 'default',
+          onPress: async () => {
+            try {
+              setUser(prev => {
+                if (!prev) return null;
+                const newConsent = !prev.consent;
+                
+                fetch(`${config.apiBaseUrl}/user/consent`, {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({ consent: newConsent }),
+                })
+                .then(async response => {
+                  const data = await response.json();
+                  if (!response.ok) {
+                    Alert.alert('Error', data?.error || 'Failed to update consent');
+                    setUser(prev => prev ? { ...prev, consent: !newConsent } : null);
+                  }
+                })
+                .catch(error => {
+                  console.error('Consent update error:', error);
+                  Alert.alert('Error', 'Failed to update consent');
+                  setUser(prev => prev ? { ...prev, consent: !newConsent } : null);
+                });
+
+                return { ...prev, consent: newConsent };
+              });
+            } catch (error) {
+              console.error('Consent update error:', error);
+              Alert.alert('Error', 'Failed to update consent');
+            }
           }
         },
       ]
     );
   };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (!user) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Text>Failed to load user data</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -101,34 +168,11 @@ const ProfileScreen = () => {
         </TouchableOpacity>
         <View style={styles.avatarContainer}>
           <Text style={styles.avatarText}>
-            {MOCK_USER.name.split(' ').map(n => n[0]).join('')}
+            {user.full_name.split(' ').map(n => n[0]).join('')}
           </Text>
         </View>
-        <Text style={styles.name}>{MOCK_USER.name}</Text>
-        <Text style={styles.pronouns}>{MOCK_USER.pronouns}</Text>
-      </View>
-
-      {/* Streak Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Current Streak</Text>
-        <View style={styles.streakContainer}>
-          <Text style={styles.streakNumber}>{MOCK_USER.streak}</Text>
-          <Text style={styles.streakLabel}>days</Text>
-        </View>
-      </View>
-
-      {/* Assessment History */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Recent Assessments</Text>
-        {MOCK_USER.assessments.map((assessment) => (
-          <View key={assessment.id} style={styles.assessmentItem}>
-            <View>
-              <Text style={styles.assessmentType}>{assessment.type}</Text>
-              <Text style={styles.assessmentDate}>{assessment.date}</Text>
-            </View>
-            <Text style={styles.assessmentScore}>{assessment.score}%</Text>
-          </View>
-        ))}
+        <Text style={styles.name}>{user.full_name}</Text>
+        {user.pronouns && <Text style={styles.pronouns}>{user.pronouns}</Text>}
       </View>
 
       {/* Account Management */}
@@ -141,27 +185,38 @@ const ProfileScreen = () => {
           showArrow
         />
         <ThemedMenuItem
-          label={MOCK_USER.consent ? 'Revoke Consent' : 'Give Consent'}
-          icon={MOCK_USER.consent ? 'close-circle' : 'checkmark-circle'}
+          label={user.consent ? 'Revoke Consent' : 'Give Consent'}
+          icon={user.consent ? 'close-circle' : 'checkmark-circle'}
           onPress={handleConsentToggle}
-        />
-        <ThemedMenuItem
-          label="Logout All Devices"
-          icon="lock-closed"
-          onPress={handleLogoutAllDevices}
         />
         <ThemedMenuItem
           label="Logout"
           icon="log-out"
-          onPress={handleLogout}
+          onPress={() => setShowLogoutModal(true)}
         />
         <ThemedMenuItem
           label="Delete Account"
           icon="trash"
-          onPress={handleDeleteAccount}
+          onPress={() => setShowDeleteModal(true)}
           color="error"
         />
       </View>
+
+      <ConfirmationModal
+        visible={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        title="Logout"
+        message="Are you sure you want to logout?"
+        confirmText="Logout"
+        onConfirm={handleLogout}
+        icon="log-out"
+      />
+
+      <DeleteAccountModal
+        visible={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteAccount}
+      />
     </ScrollView>
   );
 };
@@ -170,6 +225,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerBackArrow: {
     position: 'absolute',
@@ -219,49 +278,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 16,
-  },
-  streakContainer: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'center',
-  },
-  streakNumber: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: theme.colors.primary,
-  },
-  streakLabel: {
-    fontSize: 18,
-    color: theme.colors.primary,
-    marginLeft: 8,
-  },
-  assessmentItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-  },
-  assessmentType: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  assessmentDate: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 2,
-  },
-  assessmentScore: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: theme.colors.primary,
-  },
-  menuButton: {
-    marginBottom: 12,
-  },
-  deleteButton: {
-    marginTop: 8,
   },
 });
 
