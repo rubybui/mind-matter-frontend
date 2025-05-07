@@ -6,10 +6,11 @@ interface ProgressBarProps {
 }
 
 const ProgressBar: React.FC<ProgressBarProps> = ({ progress }) => {
+  const safeProgress = Math.min(Math.max(progress, 0), 1);
   return (
     <View style={styles.container}>
-      <View style={[styles.fill, { flex: progress }]} />
-      <View style={[styles.remaining, { flex: 1 - progress }]} />
+      <View style={[styles.fill, { flex: safeProgress }]} />
+      <View style={[styles.remaining, { flex: 1 - safeProgress }]} />
     </View>
   );
 };
