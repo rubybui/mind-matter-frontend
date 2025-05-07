@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import BaseQuestionCard from './BaseQuestionCard';
+import { theme } from '../../app/theme';
 
 interface LikertScaleQuestionData {
   question_id: number;
@@ -86,17 +87,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
   },
   scaleText: {
-    fontSize: 16,
-    color: '#AAA',
+    fontSize: theme.font.size.base,
+    color: theme.colors.subtext,
   },
   scaleTextSelected: {
-    color: '#000',
+    color: theme.colors.primary,
     fontWeight: 'bold',
-    fontSize: 18,
+    fontSize: theme.font.size.md,
   },
   labelText: {
-    fontSize: 10,
-    color: '#666',
+    fontSize: theme.font.size.xs,
+    color: theme.colors.subtext,
     textAlign: 'center',
     marginTop: 4,
   },

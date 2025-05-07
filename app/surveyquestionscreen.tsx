@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Button, ScrollView, Alert } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { View, Text, StyleSheet, Button, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { config } from '@/app/config';
 import { useAuth } from '@/app/context/AuthContext';
-
+import { Ionicons } from '@expo/vector-icons';
+import { theme } from '@/app/theme';
 import LinkertScaleQuestion from '@/components/questions/LinkertScaleQuestion';
 import YesNoQuestion from '@/components/questions/YesNoQuestion';
+import ThemedButton from '@/components/themed/ThemedButton';
 
 const PAGE_SIZE = 3;
 
 const SurveyQuestionScreen: React.FC = () => {
   const { question, totalQuestions: initialTotal } = useLocalSearchParams();
   const { token } = useAuth();
+  const router = useRouter();
 
   const [questions, setQuestions] = useState<any[]>(JSON.parse(question as string));
   const [totalQuestions, setTotalQuestions] = useState(parseInt(initialTotal as string, 10));
@@ -112,16 +115,36 @@ const SurveyQuestionScreen: React.FC = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <TouchableOpacity onPress={() => router.replace('/survey')} style={styles.backArrow}>
+        <Ionicons name="chevron-back" size={28} color={theme.colors.primary} />
+      </TouchableOpacity>
       {currentQuestions.map(renderQuestion)}
 
       <View style={styles.buttonRow}>
         {currentIndex > 0 && (
-          <Button title="Back" onPress={handleBack} />
+          <ThemedButton 
+            title="Back" 
+            onPress={handleBack}
+            icon={<Ionicons name="chevron-back" size={20} color={theme.colors.primary} />}
+            iconPosition="left"
+            style={styles.navButton}
+            variant="transparent"
+            textColor={theme.colors.primary}
+          />
         )}
-        <Button
+        <ThemedButton
           title={currentIndex + PAGE_SIZE < totalQuestions ? 'Next' : 'Finish'}
-          onPress={handleNext}
+          onPress={
+            currentIndex + PAGE_SIZE < totalQuestions
+              ? handleNext
+              : () => router.replace('/survey')
+          }
           disabled={isLoading}
+          icon={<Ionicons name="chevron-forward" size={20} color={theme.colors.primary} />}
+          iconPosition="right"
+          variant="transparent"
+          style={styles.navButton}
+          textColor={theme.colors.primary}
         />
       </View>
     </ScrollView>
@@ -131,11 +154,22 @@ const SurveyQuestionScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     padding: 16,
+    backgroundColor: theme.colors.background,
+  },
+  backArrow: {
+    marginBottom: 12,
+    marginLeft: 2,
+    marginTop: 2,
+    alignSelf: 'flex-start',
   },
   buttonRow: {
     marginTop: 24,
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  navButton: {
+    paddingHorizontal: 20,
+    minWidth: 120,
   },
 });
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import ProgressBar from './ProgressBar';
+import { theme } from '../../app/theme';
 
 interface BaseQuestionCardProps {
   questionId: number;
@@ -29,26 +30,30 @@ const BaseQuestionCard: React.FC<BaseQuestionCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFF',
-    padding: 16,
-    borderRadius: 12,
-    margin: 16,
-    shadowColor: '#000',
+    backgroundColor: theme.colors.surface,
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    margin: theme.spacing.md,
+    shadowColor: theme.colors.shadow,
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   questionId: {
-    fontSize: 12,
-    color: '#888',
-    marginBottom: 4,
+    fontSize: theme.font.size.sm,
+    color: theme.colors.subtext,
+    marginBottom: theme.spacing.xs,
     textAlign: 'center',
+    fontWeight: '500',
   },
   questionText: {
-    fontSize: 16,
+    fontSize: theme.font.size.base,
+    color: theme.colors.text,
     textAlign: 'center',
-    marginBottom: 12,
-    fontWeight: '500',
+    marginBottom: theme.spacing.md,
+    fontWeight: '600',
   },
 });
 
