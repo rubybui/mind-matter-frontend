@@ -1,50 +1,98 @@
-# Welcome to your Expo app 👋
+# Mind Matter - Mental Health Tracking Application
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Overview
+Mind Matter is a mental health tracking application developed with support from the WISYS (Wisconsin Alumni Research Foundation) grant. The application aims to provide users with tools to monitor and improve their mental well-being through regular assessments, goal tracking, and personalized insights.
 
-## Get started
+## Acknowledgments
+This project's design is inspired by and acknowledges the GoalGazor goal tracking application design from Figma Community (https://www.figma.com/community/file/1313080322821540429/goalgazor-goal-tracking-application). We extend our gratitude to the original designers for their innovative approach to goal tracking interfaces.
 
-1. Install dependencies
+## Key Features
+- **User Authentication**: Secure login and account management
+- **Mental Health Assessments**: Regular check-ins and progress tracking
+- **Streak System**: Daily engagement tracking to encourage consistent usage
+- **Crisis Plan / SOS**: Emergency resources and safety planning
+- **Consent Management**: User control over data sharing and feature access
+- **Cross-device Support**: Seamless experience across multiple devices
+- **Privacy-Focused**: User data protection and consent-based features
 
+## Technology Stack
+- **Frontend**: React Native with Expo
+- **Routing**: Expo Router
+- **State Management**: React Context API
+- **UI Components**: Custom themed components
+- **Icons**: Expo Vector Icons
+- **Styling**: React Native StyleSheet
+
+## System Architecture
+The application follows a modern mobile-first architecture:
+- **Presentation Layer**: React Native components and screens
+- **Business Logic**: Custom hooks and context providers
+- **Data Layer**: Local storage and API integration
+- **Authentication**: Secure token-based authentication system
+
+## Key Workflows
+1. **User Onboarding**
+   - Account creation
+   - Initial assessment
+   - Consent management
+   - Profile setup
+
+2. **Daily Usage**
+   - Regular check-ins
+   - Progress tracking
+   - Streak maintenance
+   - Assessment completion
+
+3. **Account Management**
+   - Profile updates
+   - Consent modifications
+   - Device management
+   - Account deletion
+
+## Getting Started
+
+### Prerequisites
+- Node.js (v14 or higher)
+- npm or yarn
+- Expo CLI
+- iOS Simulator (for Mac) or Android Studio (for Android development)
+
+### Installation
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/mind-matter-frontend.git
+   cd mind-matter-frontend
+   ```
+
+2. Install dependencies:
    ```bash
    npm install
+   # or
+   yarn install
    ```
 
-2. Start the app
-
+3. Start the development server:
    ```bash
-    npx expo start
+   npm start
+   # or
+   yarn start
    ```
 
-In the output, you'll find options to open the app in a
+4. Run on your preferred platform:
+   - Press `i` for iOS simulator
+   - Press `a` for Android emulator
+   - Scan QR code with Expo Go app for physical device
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+### Environment Setup
+Create a `.env` file in the root directory with the following variables:
+```
+API_URL=your_api_url
+AUTH_TOKEN=your_auth_token
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-## Learn more
+## License
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Support
+For support, please open an issue in the GitHub repository or contact the development team.
