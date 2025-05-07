@@ -146,6 +146,7 @@ const SurveyQuestionScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     padding: 16,
+    backgroundColor: theme.colors.background,
   },
   buttonRow: {
     marginTop: 24,
