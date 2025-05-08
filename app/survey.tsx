@@ -47,6 +47,25 @@ const SurveyListScreen = () => {
 
   const handleSelectSurvey = async (surveyId: number) => {
     try {
+      // First create a response
+      const responseRes = await fetch(`${config.apiBaseUrl}/surveys/${surveyId}/responses`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({}),
+      });
+
+      const responseData = await responseRes.json();
+
+      if (!responseRes.ok) {
+        throw new Error(responseData.error || 'Failed to create survey response');
+      }
+
+      const responseId = responseData.response_id;
+
+      // Then fetch questions
       const res = await fetch(`${config.apiBaseUrl}/surveys/${surveyId}/questions?page=1&page_size=${PAGE_SIZE}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -61,6 +80,7 @@ const SurveyListScreen = () => {
           params: {
             question: JSON.stringify(data.data),
             totalQuestions: data.pagination.total.toString(),
+            responseId: responseId.toString(),
           },
         });
       } else {
