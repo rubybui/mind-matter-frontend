@@ -3,6 +3,75 @@
 ## Overview
 Mind Matter is a mental health tracking application developed with support from the WISYS (Wisconsin Alumni Research Foundation) grant. The application aims to provide users with tools to monitor and improve their mental well-being through regular assessments, goal tracking, and personalized insights.
 
+# mind_matter
+
+Frontend Application: [Mind Matter Frontend](https://mind-matter-frontend.vercel.app/)
+
+## Project Structure - Feature-Based Modular Frontend Structure 
+
+```
+mind-matter-frontend/
+├── app/                      # Main application directory
+│   ├── config.ts            # API and environment configuration
+│   ├── context/             # React Context providers
+│   │   └── AuthContext.tsx  # Authentication context
+│   ├── survey.tsx           # Survey list screen
+│   ├── surveyquestionscreen.tsx  # Survey questions screen
+│   ├── profile.tsx          # User profile screen
+│   ├── signin.tsx           # Sign in screen
+│   └── theme.ts             # Application theme configuration
+│
+├── components/              # Reusable components
+│   ├── questions/          # Question type components
+│   │   ├── BaseQuestionCard.tsx
+│   │   ├── LinkertScaleQuestion.tsx
+│   │   └── YesNoQuestion.tsx
+│   ├── surverys/          # Survey-related components
+│   │   ├── SurveyList.tsx
+│   │   └── SurveyCard.tsx
+│   └── themed/            # Themed UI components
+│       └── ThemedButton.tsx
+│
+└── assets/                # Static assets
+    └── images/           # Image assets
+
+```
+
+
+## Getting Started
+
+1. Install dependencies:
+```bash
+npm install
+```
+
+2. Start the development server:
+```bash
+npm start
+```
+
+3. Run on iOS/Android:
+```bash
+npm run ios
+# or
+npm run android
+```
+
+## Environment Setup
+
+Create a `.env` file with the following variables:
+```
+API_BASE_URL=your_api_url
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
 ## Acknowledgments
 This project's design is inspired by and acknowledges the GoalGazor goal tracking application design from Figma Community (https://www.figma.com/community/file/1313080322821540429/goalgazor-goal-tracking-application). We extend our gratitude to the original designers for their innovative approach to goal tracking interfaces.
 
