@@ -12,7 +12,7 @@ import ThemedButton from '@/components/themed/ThemedButton';
 const PAGE_SIZE = 3;
 
 const SurveyQuestionScreen: React.FC = () => {
-  const { question, totalQuestions: initialTotal } = useLocalSearchParams();
+  const { question, totalQuestions: initialTotal, responseId: initialResponseId } = useLocalSearchParams();
   const { token } = useAuth();
   const router = useRouter();
 
@@ -22,8 +22,43 @@ const SurveyQuestionScreen: React.FC = () => {
   const [answers, setAnswers] = useState<Record<number, number | boolean>>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [responseId] = useState<number>(parseInt(initialResponseId as string, 10));
 
   const surveyId = questions.length > 0 ? questions[0].survey_id : null;
+
+  const submitSurveyResponse = async () => {
+    if (isSubmitting || !responseId) return;
+    
+    try {
+      setIsSubmitting(true);
+      
+      // Submit all answers
+      const answerPromises = Object.entries(answers).map(([questionId, value]) => 
+        fetch(`${config.apiBaseUrl}/responses/${responseId}/answers`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            question_id: parseInt(questionId),
+            answer_value: (value as number | boolean).toString(),
+          }),
+        })
+      );
+
+      await Promise.all(answerPromises);
+      
+      Alert.alert('Success', 'Survey submitted successfully!');
+      router.replace('/survey');
+    } catch (err) {
+      console.error('Failed to submit survey:', err);
+      Alert.alert('Error', 'Failed to submit survey. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const fetchMoreQuestions = async () => {
     if (isLoading) return;
@@ -96,13 +131,49 @@ const SurveyQuestionScreen: React.FC = () => {
   };
 
   const handleNext = async () => {
-    const nextIndex = currentIndex + PAGE_SIZE;
+    if (isLoading || !responseId) return;
+    
+    try {
+      setIsLoading(true);
+      
+      // Get answers for current page questions
+      const currentPageAnswers = currentQuestions.reduce((acc, q) => {
+        if (answers[q.question_id] !== undefined) {
+          acc[q.question_id] = answers[q.question_id];
+        }
+        return acc;
+      }, {} as Record<number, number | boolean>);
 
-    if (nextIndex < questions.length) {
-      setCurrentIndex(nextIndex);
-    } else if (questions.length < totalQuestions) {
-      await fetchMoreQuestions();
-      setCurrentIndex(nextIndex);
+      // Submit answers for current page
+      const answerPromises = Object.entries(currentPageAnswers).map(([questionId, value]) => 
+        fetch(`${config.apiBaseUrl}/responses/${responseId}/answers`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            question_id: parseInt(questionId),
+            answer_value: (value as number | boolean).toString(),
+          }),
+        })
+      );
+
+      await Promise.all(answerPromises);
+
+      const nextIndex = currentIndex + PAGE_SIZE;
+
+      if (nextIndex < questions.length) {
+        setCurrentIndex(nextIndex);
+      } else if (questions.length < totalQuestions) {
+        await fetchMoreQuestions();
+        setCurrentIndex(nextIndex);
+      }
+    } catch (err) {
+      console.error('Failed to submit answers:', err);
+      Alert.alert('Error', 'Failed to save answers. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -137,9 +208,9 @@ const SurveyQuestionScreen: React.FC = () => {
           onPress={
             currentIndex + PAGE_SIZE < totalQuestions
               ? handleNext
-              : () => router.replace('/survey')
+              : submitSurveyResponse
           }
-          disabled={isLoading}
+          disabled={isLoading || isSubmitting}
           icon={<Ionicons name="chevron-forward" size={20} color={theme.colors.primary} />}
           iconPosition="right"
           variant="transparent"
