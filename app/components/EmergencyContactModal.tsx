@@ -17,7 +17,7 @@ import { EmergencyContact } from '../types/user';
 export interface EmergencyContactModalProps {
   visible: boolean;
   onClose: () => void;
-  onSave: (contact: Omit<EmergencyContact, 'id'>) => Promise<void>;
+  onSave: (contact: Omit<EmergencyContact, 'contact_id'>) => Promise<void>;
   initialData: EmergencyContact | null;
   isSubmitting: boolean;
 }

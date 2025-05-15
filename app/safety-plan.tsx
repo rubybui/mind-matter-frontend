@@ -47,7 +47,7 @@ export default function SafetyPlanScreen() {
     }
   };
 
-  const handleSaveContact = async (contactData: Omit<EmergencyContact, 'id'>) => {
+  const handleSaveContact = async (contactData: Omit<EmergencyContact, 'contact_id'>) => {
     try {
       setIsSubmitting(true);
       if (selectedContact) {
@@ -149,7 +149,7 @@ export default function SafetyPlanScreen() {
           </View>
         ) : (
           emergencyContacts.map((contact) => (
-            <View key={contact.id} style={styles.contactCard}>
+            <View key={contact.contact_id} style={styles.contactCard}>
               <View style={styles.contactInfo}>
                 <Text style={styles.contactName}>{contact.contact_name}</Text>
                 <Text style={styles.contactRelationship}>{contact.description}</Text>

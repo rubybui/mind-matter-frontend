@@ -14,7 +14,7 @@ export class EmergencyContactsService extends BaseService<EmergencyContact> {
     return this.request<EmergencyContact[]>(`${config.apiBaseUrl}/emergency-contacts`);
   }
 
-  async createEmergencyContact(contact: Omit<EmergencyContact, 'id'>): Promise<EmergencyContact> {
+  async createEmergencyContact(contact: Omit<EmergencyContact, 'contact_id'>): Promise<EmergencyContact> {
     return this.request<EmergencyContact>(`${config.apiBaseUrl}/emergency-contacts`, {
       method: 'POST',
       body: JSON.stringify(contact),
