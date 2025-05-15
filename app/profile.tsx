@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from './context/AuthContext';
+import { useAuth } from '@/app/context/AuthContext';
 import { theme } from './theme';
 import ThemedMenuItem from '@/components/themed/ThemedMenuItem';
 import { Ionicons } from '@expo/vector-icons';

@@ -1,194 +1,379 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Linking } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  Linking,
+  Alert,
+  ActivityIndicator,
+  ViewStyle,
+  TextStyle,
+} from 'react-native';
 import { theme } from './theme';
-import ThemedButton from '@/components/themed/ThemedButton';
+import EmergencyContactModal from './components/EmergencyContactModal';
+import { EmergencyContactsService } from './services/emergencyContacts';
+import { EmergencyContact } from './types/user';
+import { useAuth } from '@/app/context/AuthContext';
 
-// Mock data - replace with real data later
-const CRISIS_RESOURCES = [
-  {
-    name: 'National Suicide Prevention Lifeline',
-    phone: '988',
-    description: '24/7 support for people in suicidal crisis or emotional distress',
-  },
-  {
-    name: 'Crisis Text Line',
-    text: 'HOME to 741741',
-    description: '24/7 text support for any type of crisis',
-  },
-  {
-    name: 'SAMHSA\'s National Helpline',
-    phone: '1-800-662-4357',
-    description: '24/7 treatment referral and information',
-  },
-];
+export default function SafetyPlanScreen() {
+  const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedContact, setSelectedContact] = useState<EmergencyContact | null>(null);
+  const { token } = useAuth();
 
-const EMERGENCY_CONTACTS = [
-  {
-    name: 'Dr. Sarah Chen',
-    relationship: 'Therapist',
-    phone: '(555) 123-4567',
-  },
-  {
-    name: 'Alex Morgan',
-    relationship: 'Friend',
-    phone: '(555) 987-6543',
-  },
-];
+  const emergencyContactsService = new EmergencyContactsService(
+    () => token,
+    () => window.location.href = '/login'
+  );
 
-const SafetyPlanScreen = () => {
-  const handleCall = (phone: string) => {
-    Linking.openURL(`tel:${phone}`);
+  useEffect(() => {
+    loadEmergencyContacts();
+  }, []);
+
+  const loadEmergencyContacts = async () => {
+    try {
+      setIsLoading(true);
+      const contacts = await emergencyContactsService.getEmergencyContacts();
+      setEmergencyContacts(contacts);
+    } catch (error) {
+      console.error('Error loading emergency contacts:', error);
+      Alert.alert('Error', 'Failed to load emergency contacts');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleText = (text: string) => {
-    Linking.openURL(`sms:${text}`);
+  const handleSaveContact = async (contactData: Omit<EmergencyContact, 'contact_id'>) => {
+    try {
+      setIsSubmitting(true);
+      if (selectedContact) {
+        await emergencyContactsService.updateEmergencyContact(selectedContact.contact_id, contactData);
+      } else {
+        await emergencyContactsService.createEmergencyContact(contactData);
+      }
+      await loadEmergencyContacts();
+      setIsModalVisible(false);
+      setSelectedContact(null);
+    } catch (error) {
+      console.error('Error saving contact:', error);
+      Alert.alert('Error', 'Failed to save emergency contact');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  const handleEditContact = (contact: EmergencyContact) => {
+    setSelectedContact(contact);
+    setIsModalVisible(true);
+  };
+
+  const handleDeleteContact = async (contactId: number) => {
+    try {
+      setIsSubmitting(true);
+      await emergencyContactsService.deleteEmergencyContact(contactId);
+      await loadEmergencyContacts();
+    } catch (error) {
+      console.error('Error deleting contact:', error);
+      Alert.alert('Error', 'Failed to delete emergency contact');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCall = async (phoneNumber: string) => {
+    try {
+      const url = `tel:${phoneNumber}`;
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert('Error', 'Phone calls are not supported on this device');
+      }
+    } catch (error) {
+      console.error('Error making phone call:', error);
+      Alert.alert('Error', 'Failed to make phone call');
+    }
+  };
+
+  const handleText = async (phoneNumber: string) => {
+    try {
+      const url = `sms:${phoneNumber}`;
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert('Error', 'Text messaging is not supported on this device');
+      }
+    } catch (error) {
+      console.error('Error sending text:', error);
+      Alert.alert('Error', 'Failed to send text message');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer as ViewStyle}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
+    <ScrollView style={styles.container as ViewStyle}>
+      <View style={styles.header as ViewStyle}>
         <Text style={styles.title}>Safety Plan</Text>
-        <Text style={styles.subtitle}>Resources and contacts for when you need support</Text>
+        <Text style={styles.subtitle}>Your emergency contacts and resources</Text>
       </View>
 
-      {/* Crisis Resources */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Emergency Contacts</Text>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => {
+              setSelectedContact(null);
+              setIsModalVisible(true);
+            }}
+          >
+            <Text style={styles.addButtonText}>Add Contact</Text>
+          </TouchableOpacity>
+        </View>
+
+        {emergencyContacts.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>No emergency contacts added yet</Text>
+          </View>
+        ) : (
+          emergencyContacts.map((contact) => (
+            <View key={contact.contact_id} style={styles.contactCard}>
+              <View style={styles.contactInfo}>
+                <Text style={styles.contactName}>{contact.contact_name}</Text>
+                <Text style={styles.contactRelationship}>{contact.description}</Text>
+                <Text style={styles.contactPhone}>{contact.phone_number}</Text>
+              </View>
+              <View style={styles.contactActions}>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.callButton]}
+                  onPress={() => handleCall(contact.phone_number)}
+                >
+                  <Text style={styles.actionButtonText}>Call</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.textButton]}
+                  onPress={() => handleText(contact.phone_number)}
+                >
+                  <Text style={styles.actionButtonText}>Text</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.editButton]}
+                  onPress={() => handleEditContact(contact)}
+                >
+                  <Text style={styles.actionButtonText}>Edit</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.deleteButton]}
+                  onPress={() => handleDeleteContact(contact.contact_id)}
+                >
+                  <Text style={styles.actionButtonText}>Delete</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))
+        )}
+      </View>
+
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Crisis Resources</Text>
-        {CRISIS_RESOURCES.map((resource, index) => (
-          <View key={index} style={styles.resourceItem}>
-            <Text style={styles.resourceName}>{resource.name}</Text>
-            <Text style={styles.resourceDescription}>{resource.description}</Text>
-            {resource.phone ? (
-              <ThemedButton
-                title={`Call ${resource.phone}`}
-                onPress={() => handleCall(resource.phone)}
-                style={styles.actionButton}
-              />
-            ) : (
-              <ThemedButton
-                title={`Text ${resource.text}`}
-                onPress={() => handleText(resource.text)}
-                style={styles.actionButton}
-              />
-            )}
-          </View>
-        ))}
-      </View>
+        <View style={styles.resourceCard}>
+          <Text style={styles.resourceTitle}>National Suicide Prevention Lifeline</Text>
+          <Text style={styles.resourceDescription}>
+            Available 24/7 for free and confidential support
+          </Text>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.callButton]}
+            onPress={() => handleCall('988')}
+          >
+            <Text style={styles.actionButtonText}>Call 988</Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Emergency Contacts */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Emergency Contacts</Text>
-        {EMERGENCY_CONTACTS.map((contact, index) => (
-          <View key={index} style={styles.contactItem}>
-            <View>
-              <Text style={styles.contactName}>{contact.name}</Text>
-              <Text style={styles.contactRelationship}>{contact.relationship}</Text>
-            </View>
-            <ThemedButton
-              title="Call"
-              onPress={() => handleCall(contact.phone)}
-              style={styles.actionButton}
-              variant="secondary"
-            />
-          </View>
-        ))}
-      </View>
-
-      {/* Warning Signs */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Warning Signs</Text>
-        <Text style={styles.warningText}>
-          If you notice these signs, reach out for help:
-        </Text>
-        <View style={styles.warningList}>
-          <Text style={styles.warningItem}>• Feeling overwhelmed or hopeless</Text>
-          <Text style={styles.warningItem}>• Changes in sleep or eating patterns</Text>
-          <Text style={styles.warningItem}>• Withdrawing from friends and activities</Text>
-          <Text style={styles.warningItem}>• Increased anxiety or agitation</Text>
-          <Text style={styles.warningItem}>• Thoughts of self-harm</Text>
+        <View style={styles.resourceCard}>
+          <Text style={styles.resourceTitle}>Crisis Text Line</Text>
+          <Text style={styles.resourceDescription}>
+            Text HOME to 741741 to connect with a Crisis Counselor
+          </Text>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.textButton]}
+            onPress={() => handleText('741741')}
+          >
+            <Text style={styles.actionButtonText}>Text HOME to 741741</Text>
+          </TouchableOpacity>
         </View>
       </View>
+
+      <EmergencyContactModal
+        visible={isModalVisible}
+        onClose={() => {
+          setIsModalVisible(false);
+          setSelectedContact(null);
+        }}
+        onSave={handleSaveContact}
+        initialData={selectedContact}
+        isSubmitting={isSubmitting}
+      />
     </ScrollView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
-  },
+  } as ViewStyle,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.colors.background,
+  } as ViewStyle,
   header: {
-    padding: 24,
+    padding: theme.spacing.lg,
     backgroundColor: theme.colors.primary,
-  },
+  } as ViewStyle,
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FFF',
-    marginBottom: 8,
-  },
+    fontSize: theme.font.size.xl,
+    fontWeight: theme.font.weight.bold,
+    color: theme.colors.surface,
+    marginBottom: theme.spacing.xs,
+  } as TextStyle,
   subtitle: {
-    fontSize: 16,
-    color: '#FFF',
+    fontSize: theme.font.size.base,
+    color: theme.colors.surface,
     opacity: 0.8,
-  },
+  } as TextStyle,
   section: {
-    padding: 16,
-    backgroundColor: '#FFF',
-    marginTop: 16,
-    borderRadius: 12,
-    marginHorizontal: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 16,
-  },
-  resourceItem: {
-    marginBottom: 24,
-  },
-  resourceName: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  resourceDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-  },
-  contactItem: {
+    padding: theme.spacing.lg,
+  } as ViewStyle,
+  sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-  },
+    marginBottom: theme.spacing.md,
+  } as ViewStyle,
+  sectionTitle: {
+    fontSize: theme.font.size.lg,
+    fontWeight: theme.font.weight.bold,
+    color: theme.colors.text,
+  } as TextStyle,
+  addButton: {
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.radius.md,
+  } as ViewStyle,
+  addButtonText: {
+    color: theme.colors.surface,
+    fontSize: theme.font.size.sm,
+    fontWeight: theme.font.weight.semiBold,
+  } as TextStyle,
+  emptyState: {
+    padding: theme.spacing.lg,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.md,
+    alignItems: 'center',
+  } as ViewStyle,
+  emptyStateText: {
+    color: theme.colors.text,
+    fontSize: theme.font.size.base,
+  } as TextStyle,
+  contactCard: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+    shadowColor: theme.colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  } as ViewStyle,
+  contactInfo: {
+    marginBottom: theme.spacing.md,
+  } as ViewStyle,
   contactName: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
+    fontSize: theme.font.size.base,
+    fontWeight: theme.font.weight.bold,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  } as TextStyle,
   contactRelationship: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 2,
-  },
+    fontSize: theme.font.size.sm,
+    color: theme.colors.subtext,
+    marginBottom: theme.spacing.xs,
+  } as TextStyle,
+  contactPhone: {
+    fontSize: theme.font.size.sm,
+    color: theme.colors.text,
+  } as TextStyle,
+  contactActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.sm,
+  } as ViewStyle,
   actionButton: {
-    minWidth: 120,
-  },
-  warningText: {
-    fontSize: 16,
-    marginBottom: 12,
-  },
-  warningList: {
-    marginLeft: 8,
-  },
-  warningItem: {
-    fontSize: 16,
-    marginBottom: 8,
-    color: '#444',
-  },
-});
-
-export default SafetyPlanScreen; 
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.radius.md,
+    minWidth: 80,
+    alignItems: 'center',
+  } as ViewStyle,
+  actionButtonText: {
+    color: theme.colors.surface,
+    fontSize: theme.font.size.sm,
+    fontWeight: theme.font.weight.semiBold,
+  } as TextStyle,
+  callButton: {
+    backgroundColor: theme.colors.success,
+  } as ViewStyle,
+  textButton: {
+    backgroundColor: theme.colors.primary,
+  } as ViewStyle,
+  editButton: {
+    backgroundColor: theme.colors.subtext,
+  } as ViewStyle,
+  deleteButton: {
+    backgroundColor: theme.colors.error,
+  } as ViewStyle,
+  resourceCard: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+    shadowColor: theme.colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  } as ViewStyle,
+  resourceTitle: {
+    fontSize: theme.font.size.base,
+    fontWeight: theme.font.weight.bold,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  } as TextStyle,
+  resourceDescription: {
+    fontSize: theme.font.size.sm,
+    color: theme.colors.subtext,
+    marginBottom: theme.spacing.md,
+  } as TextStyle,
+}); 

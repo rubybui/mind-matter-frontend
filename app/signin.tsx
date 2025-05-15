@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { theme } from './theme'; 
-import { useAuth } from './context/AuthContext';
+import { useAuth } from '@/app/context/AuthContext';
 import { config } from './config';
 import ThemedButton from '@/components/themed/ThemedButton';
 
