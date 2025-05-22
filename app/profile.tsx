@@ -185,7 +185,13 @@ const ProfileScreen = () => {
         <ThemedMenuItem
           label="Crisis Plan / SOS"
           icon="alert"
-          onPress={() => router.push('/safety-plan')}
+          onPress={() => router.push('./safety-plan')}
+          showArrow
+        />
+        <ThemedMenuItem
+          label="About Us"
+          icon="information-circle"
+          onPress={() => router.push('./about')}
           showArrow
         />
         <ThemedMenuItem
