@@ -109,6 +109,13 @@ const SurveyListScreen = () => {
       ) : (
         <SurveyList surveys={surveys} onSelectSurvey={handleSelectSurvey} />
       )}
+
+      <TouchableOpacity 
+        style={styles.floatingButton}
+        onPress={() => router.push('/form')}
+      >
+        <Ionicons name="document-text-outline" size={24} color="#fff" />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -135,6 +142,25 @@ const styles = StyleSheet.create({
   },
   profileButton: {
     padding: 8,
+  },
+  floatingButton: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    backgroundColor: theme.colors.primary,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
 });
 

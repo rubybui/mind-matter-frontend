@@ -42,7 +42,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    // Simulate token restoration logic if needed (e.g., from AsyncStorage in the future)
+    // Restore token from localStorage on web platform
+    if (Platform.OS === 'web') {
+      const storedToken = localStorage.getItem('authToken');
+      const storedUserData = localStorage.getItem('userData');
+      
+      if (storedToken && storedUserData) {
+        try {
+          const userData = JSON.parse(storedUserData);
+          setUser({ token: storedToken, userData });
+        } catch (error) {
+          console.error('Failed to parse stored user data:', error);
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userData');
+        }
+      }
+    }
     setIsHydrated(true);
   }, []);
 
@@ -50,11 +65,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = (token: string, userData: any) => {
     setUser({ token, userData });
+    if (Platform.OS === 'web') {
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('userData', JSON.stringify(userData));
+    }
   };
 
   const logout = () => {
     console.log(`[${Platform.OS}] Logout called`);
     setUser(null);
+    if (Platform.OS === 'web') {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userData');
+    }
   };
 
   const value: AuthContextType = {
