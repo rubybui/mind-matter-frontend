@@ -27,8 +27,26 @@ const SignInScreen = () => {
       const data = await res.json();
   
       if (res.ok) {
-        login(data.token, { user_id: data.user_id }); // you can fetch user details later
-        router.push('/survey'); // or wherever your main screen is
+        // Fetch user data to check consent
+        const userRes = await fetch(`${config.apiBaseUrl}/users/me`, {
+          headers: {
+            'Authorization': `Bearer ${data.token}`,
+          },
+        });
+
+        const userData = await userRes.json();
+
+        if (userRes.ok) {
+          login(data.token, { user_id: data.user_id });
+          // If user hasn't given consent, redirect to terms and conditions
+          if (!userData.user.consent) {
+            router.replace('/term');
+          } else {
+            router.replace('/survey');
+          }
+        } else {
+          alert(userData?.error || 'Failed to fetch user data');
+        }
       } else {
         alert(data?.error || 'Login failed.');
       }
@@ -40,14 +58,13 @@ const SignInScreen = () => {
   
   return (
     <View style={styles.container}>
-                 <Image
-           source={require('@/assets/images/mind_matters.png')} // adjust if in a different path
-           style={styles.logo}
-           resizeMode="contain"
-         />
+      <Image
+        source={require('@/assets/images/mind_matters.png')}
+        style={styles.logo}
+        resizeMode="contain"
+      />
       <Text style={styles.subtitle}>Sign In</Text>
 
-   
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -64,73 +81,71 @@ const SignInScreen = () => {
         secureTextEntry
       />
 
-<ThemedButton title={"Log In"} onPress={handleLogin}/>
+      <ThemedButton title={"Log In"} onPress={handleLogin}/>
 
       <TouchableOpacity onPress={() => router.push('/resetPassword')}>
         <Text style={styles.linkSmall}>Forgot Password?</Text>
       </TouchableOpacity>
-
-
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-      padding: theme.spacing.lg,
-      justifyContent: 'center',
-    },
-    logo: {
-      width: 64,
-      height: 64,
-      alignSelf: 'center',
-      marginBottom: theme.spacing.md,
-    },
-    title: {
-      fontSize: theme.font.size.lg,
-      fontWeight: theme.font.weight.bold,
-      textAlign: 'center',
-      color: theme.colors.text,
-    },
-    subtitle: {
-      fontSize: theme.font.size.base,
-      textAlign: 'center',
-      color: theme.colors.text,
-      marginBottom: theme.spacing.lg,
-    },
-    input: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.radius.md,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.sm + 4,
-      fontSize: theme.font.size.base,
-      marginBottom: theme.spacing.md + 2,
-      shadowColor: theme.colors.shadow,
-      shadowOpacity: 0.05,
-      shadowRadius: 4,
-      elevation: 2,
-    },
-    button: {
-      backgroundColor: theme.colors.primary,
-      paddingVertical: theme.spacing.md,
-      borderRadius: theme.radius.lg,
-      alignItems: 'center',
-      marginTop: theme.spacing.sm + 4,
-      elevation: 3,
-    },
-    buttonText: {
-      color: theme.colors.surface,
-      fontSize: theme.font.size.base,
-      fontWeight: theme.font.weight.semiBold,
-    },
-    linkSmall: {
-      marginTop: theme.spacing.md,
-      color: theme.colors.link,
-      textAlign: 'center',
-      fontSize: theme.font.size.sm,
-    },
-  });
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+    padding: theme.spacing.lg,
+    justifyContent: 'center',
+  },
+  logo: {
+    width: 64,
+    height: 64,
+    alignSelf: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  title: {
+    fontSize: theme.font.size.lg,
+    fontWeight: theme.font.weight.bold,
+    textAlign: 'center',
+    color: theme.colors.text,
+  },
+  subtitle: {
+    fontSize: theme.font.size.base,
+    textAlign: 'center',
+    color: theme.colors.text,
+    marginBottom: theme.spacing.lg,
+  },
+  input: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.md,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm + 4,
+    fontSize: theme.font.size.base,
+    marginBottom: theme.spacing.md + 2,
+    shadowColor: theme.colors.shadow,
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  button: {
+    backgroundColor: theme.colors.primary,
+    paddingVertical: theme.spacing.md,
+    borderRadius: theme.radius.lg,
+    alignItems: 'center',
+    marginTop: theme.spacing.sm + 4,
+    elevation: 3,
+  },
+  buttonText: {
+    color: theme.colors.surface,
+    fontSize: theme.font.size.base,
+    fontWeight: theme.font.weight.semiBold,
+  },
+  linkSmall: {
+    marginTop: theme.spacing.md,
+    color: theme.colors.link,
+    textAlign: 'center',
+    fontSize: theme.font.size.sm,
+  },
+});
 
-  export default SignInScreen
+export default SignInScreen;

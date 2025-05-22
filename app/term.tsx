@@ -3,10 +3,12 @@ import ThemedButton from "@/components/themed/ThemedButton";
 import { View } from "react-native";
 import {config} from "@/app/config"
 import { useAuth } from '@/app/context/AuthContext'; // adjust path if needed
+import { useRouter } from 'expo-router';
 
 
  const TermsAndConditionsScreen = () => {
     const { token } = useAuth();
+    const router = useRouter();
 
     const handleAccept = async () => {
         try {
@@ -23,9 +25,7 @@ import { useAuth } from '@/app/context/AuthContext'; // adjust path if needed
           const data = await res.json();
       
           if (res.ok) {
-            // navigate or give success message
-            alert('Consent recorded. Proceeding...');
-            // router.push('/next-screen'); // if using navigation
+            router.replace('/survey');
           } else {
             alert(`Failed to update consent: ${data?.error}`);
           }

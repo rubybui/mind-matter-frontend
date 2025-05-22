@@ -95,21 +95,25 @@ const ProfileScreen = () => {
   const handleConsentToggle = () => {
     if (!user) return;
 
+    if (!user.consent) {
+      // If user wants to give consent, navigate to terms and conditions
+      router.push('/term');
+      return;
+    }
+
     Alert.alert(
       'Update Consent',
-      user.consent 
-        ? 'Are you sure you want to revoke consent? This will limit some features.'
-        : 'Are you sure you want to give consent? This will enable all features.',
+      'Are you sure you want to revoke consent? This will limit some features.',
       [
         { text: 'Cancel', style: 'cancel' },
         { 
-          text: user.consent ? 'Revoke' : 'Give',
-          style: user.consent ? 'destructive' : 'default',
+          text: 'Revoke',
+          style: 'destructive',
           onPress: async () => {
             try {
               setUser(prev => {
                 if (!prev) return null;
-                const newConsent = !prev.consent;
+                const newConsent = false;
                 
                 fetch(`${config.apiBaseUrl}/user/consent`, {
                   method: 'PUT',
@@ -123,13 +127,13 @@ const ProfileScreen = () => {
                   const data = await response.json();
                   if (!response.ok) {
                     Alert.alert('Error', data?.error || 'Failed to update consent');
-                    setUser(prev => prev ? { ...prev, consent: !newConsent } : null);
+                    setUser(prev => prev ? { ...prev, consent: true } : null);
                   }
                 })
                 .catch(error => {
                   console.error('Consent update error:', error);
                   Alert.alert('Error', 'Failed to update consent');
-                  setUser(prev => prev ? { ...prev, consent: !newConsent } : null);
+                  setUser(prev => prev ? { ...prev, consent: true } : null);
                 });
 
                 return { ...prev, consent: newConsent };
